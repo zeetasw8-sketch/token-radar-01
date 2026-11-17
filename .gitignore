@@ -1,0 +1,18 @@
+# Build / bundle outputs
+out/
+*.tar.gz
+
+# Dependencies
+node_modules/
+
+# Kit (downloaded tooling, not part of the submission)
+kit/
+
+# Secrets — NEVER commit these
+.env
+*.pem
+*.key
+makefun-keypair.json
+*keypair*.json
+credentials
+.makefun/credentials

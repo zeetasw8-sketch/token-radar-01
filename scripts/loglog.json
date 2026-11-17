@@ -1,0 +1,458 @@
+{
+  "generatedAt": "2026-11-17T08:29:10.141Z",
+  "generator": "entry/scripts/loglog-test.mjs (Node stdlib only, offline, deterministic)",
+  "input": {
+    "snapshot": "kit/extracted/token-radar-01-kit/input/snapshot.json (SEALED)",
+    "as_of": "2026-11-14",
+    "protocols": 758,
+    "note": "Same sealed snapshot as backtest.mjs. backtest.mjs uses NO seed and NO 20 trials: its split is one deterministic slug-sorted 64/64 split, both directions, pooled. The primary comparison below follows that exact protocol; the 20 random trials are a supplementary robustness check only."
+  },
+  "model": {
+    "peer_min_peers": 5,
+    "peer_multiple_floor": 0.02,
+    "peer_multiple_cap": 1,
+    "growth_weight": 0.5,
+    "growth_floor": -60,
+    "growth_cap": 120,
+    "maturity_floor": 0.6,
+    "maturity_range": 0.4,
+    "maturity_days": 1095,
+    "unknown_age_days": 365,
+    "shrinkage": "w = n/(n+5) applied when 5 <= n < 10; n >= 10 uses the category fit unshrunk; n < 5 uses the global fit",
+    "clamp": "[0.02, 1.0] on the predicted mcap/TVL ratio, same as baseline"
+  },
+  "tokenizedPeers": 128,
+  "splitHalfDeterministic": {
+    "peerDefinition": "mcap_usd > 0 and tvl_usd >= $5M; peers sorted by slug, split at midpoint",
+    "nPeers": 128,
+    "directions": [
+      {
+        "label": "trainHalf0_testHalf1",
+        "nTrain": 64,
+        "nTest": 64,
+        "baselineFull": {
+          "n": 64,
+          "medianAbsLog10Error": 0.6288,
+          "medianAbsLog10Error_x": 4.2537,
+          "medianAbsPctError": 85.9376,
+          "within2x": 0.2813,
+          "within3x": 0.3906,
+          "within5x": 0.5469
+        },
+        "baselineTvlOnly": {
+          "n": 64,
+          "medianAbsLog10Error": 0.6519,
+          "medianAbsLog10Error_x": 4.4862,
+          "medianAbsPctError": 85.745,
+          "within2x": 0.2813,
+          "within3x": 0.3594,
+          "within5x": 0.5469
+        },
+        "loglogShrunkTvlOnly": {
+          "n": 64,
+          "medianAbsLog10Error": 0.4851,
+          "medianAbsLog10Error_x": 3.0555,
+          "medianAbsPctError": 87.8332,
+          "within2x": 0.25,
+          "within3x": 0.5,
+          "within5x": 0.6094
+        },
+        "loglogShrunkFull": {
+          "n": 64,
+          "medianAbsLog10Error": 0.5088,
+          "medianAbsLog10Error_x": 3.2272,
+          "medianAbsPctError": 87.7098,
+          "within2x": 0.2813,
+          "within3x": 0.4531,
+          "within5x": 0.5781
+        },
+        "loglogNoShrinkTvlOnly": {
+          "n": 64,
+          "medianAbsLog10Error": 0.5164,
+          "medianAbsLog10Error_x": 3.2838,
+          "medianAbsPctError": 88.9944,
+          "within2x": 0.2188,
+          "within3x": 0.4688,
+          "within5x": 0.5938
+        },
+        "fits": [
+          {
+            "category": "Lending",
+            "nTrain": 11,
+            "slopeCat": 1.6631564841551019,
+            "slopeGlobal": 0.6349689499770121,
+            "w": 1,
+            "slopeUsed": 1.6632,
+            "interceptUsed": -13.0112,
+            "source": "category (n>=10)"
+          },
+          {
+            "category": "Yield",
+            "nTrain": 6,
+            "slopeCat": 0.7585,
+            "slopeGlobal": 0.635,
+            "w": 0.5455,
+            "slopeUsed": 0.7023,
+            "interceptUsed": 3.0775,
+            "source": "shrunk w=0.5455"
+          },
+          {
+            "category": "CEX",
+            "nTrain": 5,
+            "slopeCat": 1.3402,
+            "slopeGlobal": 0.635,
+            "w": 0.5,
+            "slopeUsed": 0.9876,
+            "interceptUsed": -2.3661,
+            "source": "shrunk w=0.5"
+          }
+        ],
+        "globalFit": {
+          "a": 4.8134,
+          "b": 0.635,
+          "n": 64
+        }
+      },
+      {
+        "label": "trainHalf1_testHalf0",
+        "nTrain": 64,
+        "nTest": 64,
+        "baselineFull": {
+          "n": 64,
+          "medianAbsLog10Error": 0.763,
+          "medianAbsLog10Error_x": 5.7949,
+          "medianAbsPctError": 98.3587,
+          "within2x": 0.2344,
+          "within3x": 0.3594,
+          "within5x": 0.4688
+        },
+        "baselineTvlOnly": {
+          "n": 64,
+          "medianAbsLog10Error": 0.7619,
+          "medianAbsLog10Error_x": 5.7801,
+          "medianAbsPctError": 98.4393,
+          "within2x": 0.2344,
+          "within3x": 0.2969,
+          "within5x": 0.4844
+        },
+        "loglogShrunkTvlOnly": {
+          "n": 64,
+          "medianAbsLog10Error": 0.6108,
+          "medianAbsLog10Error_x": 4.0811,
+          "medianAbsPctError": 88.5785,
+          "within2x": 0.3125,
+          "within3x": 0.4375,
+          "within5x": 0.5625
+        },
+        "loglogShrunkFull": {
+          "n": 64,
+          "medianAbsLog10Error": 0.5467,
+          "medianAbsLog10Error_x": 3.5215,
+          "medianAbsPctError": 89.6298,
+          "within2x": 0.3594,
+          "within3x": 0.4688,
+          "within5x": 0.5938
+        },
+        "loglogNoShrinkTvlOnly": {
+          "n": 64,
+          "medianAbsLog10Error": 0.6013,
+          "medianAbsLog10Error_x": 3.9933,
+          "medianAbsPctError": 92.6726,
+          "within2x": 0.2813,
+          "within3x": 0.4219,
+          "within5x": 0.5938
+        },
+        "fits": [
+          {
+            "category": "Dexs",
+            "nTrain": 7,
+            "slopeCat": 1.7278,
+            "slopeGlobal": 0.4043,
+            "w": 0.5833,
+            "slopeUsed": 1.1763,
+            "interceptUsed": -3.7951,
+            "source": "shrunk w=0.5833"
+          },
+          {
+            "category": "RWA",
+            "nTrain": 6,
+            "slopeCat": 0.5028,
+            "slopeGlobal": 0.4043,
+            "w": 0.5455,
+            "slopeUsed": 0.458,
+            "interceptUsed": 8.4259,
+            "source": "shrunk w=0.5455"
+          },
+          {
+            "category": "Canonical Bridge",
+            "nTrain": 6,
+            "slopeCat": 0.4685,
+            "slopeGlobal": 0.4043,
+            "w": 0.5455,
+            "slopeUsed": 0.4393,
+            "interceptUsed": 9.0476,
+            "source": "shrunk w=0.5455"
+          },
+          {
+            "category": "Liquid Staking",
+            "nTrain": 5,
+            "slopeCat": 0.5173,
+            "slopeGlobal": 0.4043,
+            "w": 0.5,
+            "slopeUsed": 0.4608,
+            "interceptUsed": 7.381,
+            "source": "shrunk w=0.5"
+          },
+          {
+            "category": "Basis Trading",
+            "nTrain": 5,
+            "slopeCat": 0.1453,
+            "slopeGlobal": 0.4043,
+            "w": 0.5,
+            "slopeUsed": 0.2748,
+            "interceptUsed": 11.4246,
+            "source": "shrunk w=0.5"
+          }
+        ],
+        "globalFit": {
+          "a": 9.2383,
+          "b": 0.4043,
+          "n": 64
+        }
+      }
+    ],
+    "pooled": {
+      "baselineFull": {
+        "n": 128,
+        "medianAbsLog10Error": 0.6804,
+        "medianAbsLog10Error_x": 4.7903,
+        "medianAbsPctError": 90.3949,
+        "within2x": 0.2578,
+        "within3x": 0.375,
+        "within5x": 0.5078
+      },
+      "baselineTvlOnly": {
+        "n": 128,
+        "medianAbsLog10Error": 0.689,
+        "medianAbsLog10Error_x": 4.8862,
+        "medianAbsPctError": 91.7096,
+        "within2x": 0.2578,
+        "within3x": 0.3281,
+        "within5x": 0.5156
+      },
+      "loglogShrunkTvlOnly": {
+        "n": 128,
+        "medianAbsLog10Error": 0.5904,
+        "medianAbsLog10Error_x": 3.8944,
+        "medianAbsPctError": 88.0256,
+        "within2x": 0.2813,
+        "within3x": 0.4688,
+        "within5x": 0.5859
+      },
+      "loglogShrunkFull": {
+        "n": 128,
+        "medianAbsLog10Error": 0.5088,
+        "medianAbsLog10Error_x": 3.2272,
+        "medianAbsPctError": 88.273,
+        "within2x": 0.3203,
+        "within3x": 0.4609,
+        "within5x": 0.5859
+      },
+      "loglogNoShrinkTvlOnly": {
+        "n": 128,
+        "medianAbsLog10Error": 0.5881,
+        "medianAbsLog10Error_x": 3.8735,
+        "medianAbsPctError": 89.7475,
+        "within2x": 0.25,
+        "within3x": 0.4453,
+        "within5x": 0.5938
+      }
+    }
+  },
+  "randomTrials20": {
+    "method": "20 random 64/64 split-half trials, both directions pooled per trial, mulberry32 seed 20261114",
+    "trials": [
+      {
+        "trial": 1,
+        "baselineTvlOnly_medLog10": 0.6773,
+        "baselineTvlOnly_within2x": 0.2578,
+        "loglog_medLog10": 0.5576,
+        "loglog_within2x": 0.2891,
+        "loglogMinusBaseline_medLog10": -0.1197
+      },
+      {
+        "trial": 2,
+        "baselineTvlOnly_medLog10": 0.7454,
+        "baselineTvlOnly_within2x": 0.2031,
+        "loglog_medLog10": 0.6018,
+        "loglog_within2x": 0.2891,
+        "loglogMinusBaseline_medLog10": -0.1436
+      },
+      {
+        "trial": 3,
+        "baselineTvlOnly_medLog10": 0.6726,
+        "baselineTvlOnly_within2x": 0.2891,
+        "loglog_medLog10": 0.5572,
+        "loglog_within2x": 0.3281,
+        "loglogMinusBaseline_medLog10": -0.1154
+      },
+      {
+        "trial": 4,
+        "baselineTvlOnly_medLog10": 0.7299,
+        "baselineTvlOnly_within2x": 0.2266,
+        "loglog_medLog10": 0.5948,
+        "loglog_within2x": 0.2891,
+        "loglogMinusBaseline_medLog10": -0.1351
+      },
+      {
+        "trial": 5,
+        "baselineTvlOnly_medLog10": 0.6932,
+        "baselineTvlOnly_within2x": 0.2031,
+        "loglog_medLog10": 0.5674,
+        "loglog_within2x": 0.3203,
+        "loglogMinusBaseline_medLog10": -0.1258
+      },
+      {
+        "trial": 6,
+        "baselineTvlOnly_medLog10": 0.7141,
+        "baselineTvlOnly_within2x": 0.2266,
+        "loglog_medLog10": 0.579,
+        "loglog_within2x": 0.2656,
+        "loglogMinusBaseline_medLog10": -0.1351
+      },
+      {
+        "trial": 7,
+        "baselineTvlOnly_medLog10": 0.7208,
+        "baselineTvlOnly_within2x": 0.2734,
+        "loglog_medLog10": 0.5126,
+        "loglog_within2x": 0.3125,
+        "loglogMinusBaseline_medLog10": -0.2082
+      },
+      {
+        "trial": 8,
+        "baselineTvlOnly_medLog10": 0.7051,
+        "baselineTvlOnly_within2x": 0.2656,
+        "loglog_medLog10": 0.534,
+        "loglog_within2x": 0.3281,
+        "loglogMinusBaseline_medLog10": -0.1711
+      },
+      {
+        "trial": 9,
+        "baselineTvlOnly_medLog10": 0.6265,
+        "baselineTvlOnly_within2x": 0.2656,
+        "loglog_medLog10": 0.5135,
+        "loglog_within2x": 0.3203,
+        "loglogMinusBaseline_medLog10": -0.113
+      },
+      {
+        "trial": 10,
+        "baselineTvlOnly_medLog10": 0.7191,
+        "baselineTvlOnly_within2x": 0.25,
+        "loglog_medLog10": 0.6117,
+        "loglog_within2x": 0.25,
+        "loglogMinusBaseline_medLog10": -0.1074
+      },
+      {
+        "trial": 11,
+        "baselineTvlOnly_medLog10": 0.7176,
+        "baselineTvlOnly_within2x": 0.2266,
+        "loglog_medLog10": 0.5884,
+        "loglog_within2x": 0.2734,
+        "loglogMinusBaseline_medLog10": -0.1292
+      },
+      {
+        "trial": 12,
+        "baselineTvlOnly_medLog10": 0.7162,
+        "baselineTvlOnly_within2x": 0.2422,
+        "loglog_medLog10": 0.5829,
+        "loglog_within2x": 0.2734,
+        "loglogMinusBaseline_medLog10": -0.1333
+      },
+      {
+        "trial": 13,
+        "baselineTvlOnly_medLog10": 0.7333,
+        "baselineTvlOnly_within2x": 0.2188,
+        "loglog_medLog10": 0.5755,
+        "loglog_within2x": 0.2969,
+        "loglogMinusBaseline_medLog10": -0.1578
+      },
+      {
+        "trial": 14,
+        "baselineTvlOnly_medLog10": 0.6965,
+        "baselineTvlOnly_within2x": 0.2188,
+        "loglog_medLog10": 0.5842,
+        "loglog_within2x": 0.2734,
+        "loglogMinusBaseline_medLog10": -0.1123
+      },
+      {
+        "trial": 15,
+        "baselineTvlOnly_medLog10": 0.7009,
+        "baselineTvlOnly_within2x": 0.1953,
+        "loglog_medLog10": 0.5645,
+        "loglog_within2x": 0.25,
+        "loglogMinusBaseline_medLog10": -0.1364
+      },
+      {
+        "trial": 16,
+        "baselineTvlOnly_medLog10": 0.7049,
+        "baselineTvlOnly_within2x": 0.2422,
+        "loglog_medLog10": 0.5684,
+        "loglog_within2x": 0.2969,
+        "loglogMinusBaseline_medLog10": -0.1365
+      },
+      {
+        "trial": 17,
+        "baselineTvlOnly_medLog10": 0.7143,
+        "baselineTvlOnly_within2x": 0.25,
+        "loglog_medLog10": 0.5445,
+        "loglog_within2x": 0.3203,
+        "loglogMinusBaseline_medLog10": -0.1698
+      },
+      {
+        "trial": 18,
+        "baselineTvlOnly_medLog10": 0.6446,
+        "baselineTvlOnly_within2x": 0.1953,
+        "loglog_medLog10": 0.5858,
+        "loglog_within2x": 0.3047,
+        "loglogMinusBaseline_medLog10": -0.0588
+      },
+      {
+        "trial": 19,
+        "baselineTvlOnly_medLog10": 0.7937,
+        "baselineTvlOnly_within2x": 0.2656,
+        "loglog_medLog10": 0.6113,
+        "loglog_within2x": 0.2813,
+        "loglogMinusBaseline_medLog10": -0.1824
+      },
+      {
+        "trial": 20,
+        "baselineTvlOnly_medLog10": 0.7406,
+        "baselineTvlOnly_within2x": 0.2266,
+        "loglog_medLog10": 0.5803,
+        "loglog_within2x": 0.3047,
+        "loglogMinusBaseline_medLog10": -0.1603
+      }
+    ],
+    "summary": {
+      "nTrials": 20,
+      "baselineTvlOnly_meanMedLog10": 0.7083,
+      "baselineTvlOnly_medianMedLog10": 0.7142,
+      "baselineTvlOnly_meanWithin2x": 0.2371,
+      "loglog_meanMedLog10": 0.5708,
+      "loglog_medianMedLog10": 0.5773,
+      "loglog_meanWithin2x": 0.2934,
+      "trialsWhereLoglogWinsMedLog10": 20,
+      "meanDeltaMedLog10_loglogMinusBaseline": -0.1376
+    }
+  },
+  "adoption": {
+    "criterion": "ADOPT only if pooled median log10 error falls >=10% relative AND within-2x rises, vs the tvlOnly baseline (the log-log variant has no growth/maturity leg)",
+    "medianLog10_relativeChange": 0.1431,
+    "within2x_change_pp": 2.35,
+    "verdict": "ADOPT"
+  },
+  "interpretation": [
+    "Primary (exact backtest.mjs protocol, pooled n=128): see pooled numbers in this file. The verdict is computed from them, not from the random trials.",
+    "Supplementary (20 seeded random splits): mean/median of the per-trial pooled median log10 error, for baseline tvlOnly vs log-log. If log-log wins the deterministic split but loses most random trials (or vice versa), the deterministic result is a split artefact, not a model win."
+  ]
+}
