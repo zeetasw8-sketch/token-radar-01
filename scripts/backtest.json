@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-17T08:21:48.802Z",
+  "generatedAt": "2026-11-19T15:47:00.673Z",
   "generator": "entry/scripts/backtest.mjs (Node stdlib only, offline, deterministic)",
   "input": {
     "snapshot": "kit/extracted/token-radar-01-kit/input/snapshot.json (SEALED)",
@@ -20,11 +20,14 @@
     "maturity_range": 0.4,
     "maturity_days": 1095,
     "unknown_age_days": 365,
-    "version": "radar-2-peer"
+    "slope_median_slope": 0.55,
+    "slope_median_winsor_q": 0.2,
+    "slope_median_prior": 10,
+    "version": "radar-4-slope-median",
+    "baselineVersion": "radar-3-loglog"
   },
   "tokenizedPeers": 128,
-  "globalMultiple": 0.2138,
-  "globalPeers": 128,
+  "trimmedPeersFullFit": 78,
   "splitHalf": {
     "peerDefinition": "mcap_usd > 0 and tvl_usd >= $5M; peers sorted by slug, split at midpoint",
     "nPeers": 128,
@@ -33,977 +36,345 @@
         "label": "trainHalf0_testHalf1",
         "nTrain": 64,
         "nTest": 64,
-        "fullModel": {
+        "radar4": {
           "n": 64,
-          "medianAbsLog10Error": 0.6288,
-          "medianAbsLog10Error_x": 4.2537,
-          "medianAbsPctError": 85.9376,
+          "medianAbsLog10Error": 0.4888,
+          "medianAbsLog10Error_x": 3.0816,
           "within2x": 0.2813,
-          "within3x": 0.3906,
-          "within5x": 0.5469
+          "within3x": 0.4844,
+          "within5x": 0.6563
         },
-        "tvlOnly": {
+        "radar3": {
           "n": 64,
-          "medianAbsLog10Error": 0.6519,
-          "medianAbsLog10Error_x": 4.4862,
-          "medianAbsPctError": 85.745,
+          "medianAbsLog10Error": 0.5088,
+          "medianAbsLog10Error_x": 3.2272,
           "within2x": 0.2813,
-          "within3x": 0.3594,
-          "within5x": 0.5469
+          "within3x": 0.4531,
+          "within5x": 0.5781
         }
       },
       {
         "label": "trainHalf1_testHalf0",
         "nTrain": 64,
         "nTest": 64,
-        "fullModel": {
+        "radar4": {
           "n": 64,
-          "medianAbsLog10Error": 0.763,
-          "medianAbsLog10Error_x": 5.7949,
-          "medianAbsPctError": 98.3587,
-          "within2x": 0.2344,
-          "within3x": 0.3594,
-          "within5x": 0.4688
+          "medianAbsLog10Error": 0.5737,
+          "medianAbsLog10Error_x": 3.7472,
+          "within2x": 0.2656,
+          "within3x": 0.4688,
+          "within5x": 0.5625
         },
-        "tvlOnly": {
+        "radar3": {
           "n": 64,
-          "medianAbsLog10Error": 0.7619,
-          "medianAbsLog10Error_x": 5.7801,
-          "medianAbsPctError": 98.4393,
-          "within2x": 0.2344,
-          "within3x": 0.2969,
-          "within5x": 0.4844
+          "medianAbsLog10Error": 0.5467,
+          "medianAbsLog10Error_x": 3.5215,
+          "within2x": 0.3594,
+          "within3x": 0.4688,
+          "within5x": 0.5938
         }
       }
     ],
     "pooled": {
-      "fullModel": {
+      "radar4": {
         "n": 128,
-        "medianAbsLog10Error": 0.6804,
-        "medianAbsLog10Error_x": 4.7903,
-        "medianAbsPctError": 90.3949,
-        "within2x": 0.2578,
-        "within3x": 0.375,
-        "within5x": 0.5078
+        "medianAbsLog10Error": 0.5147,
+        "medianAbsLog10Error_x": 3.271,
+        "within2x": 0.2734,
+        "within3x": 0.4766,
+        "within5x": 0.6094
       },
-      "tvlOnly": {
+      "radar3": {
         "n": 128,
-        "medianAbsLog10Error": 0.689,
-        "medianAbsLog10Error_x": 4.8862,
-        "medianAbsPctError": 91.7096,
-        "within2x": 0.2578,
-        "within3x": 0.3281,
-        "within5x": 0.5156
-      }
-    },
-    "averageOfDirections": {
-      "fullModel": {
-        "nTest": 128,
-        "medianAbsLog10Error": 0.6959,
-        "medianAbsLog10Error_x": 5.0243,
-        "medianAbsPctError": 92.1482,
-        "within2x": 0.2579,
-        "within3x": 0.375,
-        "within5x": 0.5079
-      },
-      "tvlOnly": {
-        "nTest": 128,
-        "medianAbsLog10Error": 0.7069,
-        "medianAbsLog10Error_x": 5.1332,
-        "medianAbsPctError": 92.0922,
-        "within2x": 0.2579,
-        "within3x": 0.3282,
-        "within5x": 0.5157
+        "medianAbsLog10Error": 0.5088,
+        "medianAbsLog10Error_x": 3.2272,
+        "within2x": 0.3203,
+        "within3x": 0.4609,
+        "within5x": 0.5859
       }
     }
   },
-  "sensitivity": {
-    "peerMultiple_baseline": {
-      "boardSize": 177,
-      "top20OverlapWithBaseline": "20/20",
-      "top20": [
-        {
-          "rank": 1,
-          "slug": "steakhouse-financial",
-          "implied_value_usd": 464924662
-        },
-        {
-          "rank": 2,
-          "slug": "gauntlet",
-          "implied_value_usd": 276897852
-        },
-        {
-          "rank": 3,
-          "slug": "veda",
-          "implied_value_usd": 266216989
-        },
-        {
-          "rank": 4,
-          "slug": "usdd",
-          "implied_value_usd": 183214585
-        },
-        {
-          "rank": 5,
-          "slug": "upshift",
-          "implied_value_usd": 95509574
-        },
-        {
-          "rank": 6,
-          "slug": "bittensor-dtao",
-          "implied_value_usd": 77272598
-        },
-        {
-          "rank": 7,
-          "slug": "onre",
-          "implied_value_usd": 66090736
-        },
-        {
-          "rank": 8,
-          "slug": "nonce-capital",
-          "implied_value_usd": 64417968
-        },
-        {
-          "rank": 9,
-          "slug": "opentrade",
-          "implied_value_usd": 56510731
-        },
-        {
-          "rank": 10,
-          "slug": "plume-vaults",
-          "implied_value_usd": 49997400
-        },
-        {
-          "rank": 11,
-          "slug": "symbiotic",
-          "implied_value_usd": 47128117
-        },
-        {
-          "rank": 12,
-          "slug": "rockawayx",
-          "implied_value_usd": 42300854
-        },
-        {
-          "rank": 13,
-          "slug": "hive-protocol",
-          "implied_value_usd": 37830837
-        },
-        {
-          "rank": 14,
-          "slug": "hyperithm",
-          "implied_value_usd": 37004167
-        },
-        {
-          "rank": 15,
-          "slug": "r25",
-          "implied_value_usd": 36691803
-        },
-        {
-          "rank": 16,
-          "slug": "k3-capital",
-          "implied_value_usd": 33876308
-        },
-        {
-          "rank": 17,
-          "slug": "tori-finance",
-          "implied_value_usd": 33799711
-        },
-        {
-          "rank": 18,
-          "slug": "lightning-network",
-          "implied_value_usd": 32425831
-        },
-        {
-          "rank": 19,
-          "slug": "axis",
-          "implied_value_usd": 29322655
-        },
-        {
-          "rank": 20,
-          "slug": "lofty",
-          "implied_value_usd": 27793601
-        }
-      ],
-      "trackedRanks": {
-        "polymarket-international": null,
-        "gauntlet": 2,
-        "sentora-curator": null
-      }
+  "loo": {
+    "radar4": {
+      "n": 128,
+      "medianAbsLog10Error": 0.5029,
+      "medianAbsLog10Error_x": 3.1835,
+      "within2x": 0.2813,
+      "within3x": 0.4844,
+      "within5x": 0.5938
     },
-    "flat025": {
-      "boardSize": 177,
-      "top20OverlapWithBaseline": "17/20",
-      "top20": [
-        {
-          "rank": 1,
-          "slug": "steakhouse-financial",
-          "implied_value_usd": 543636080
-        },
-        {
-          "rank": 2,
-          "slug": "gauntlet",
-          "implied_value_usd": 323776463
-        },
-        {
-          "rank": 3,
-          "slug": "veda",
-          "implied_value_usd": 311287338
-        },
-        {
-          "rank": 4,
-          "slug": "usdd",
-          "implied_value_usd": 214232685
-        },
-        {
-          "rank": 5,
-          "slug": "upshift",
-          "implied_value_usd": 111679277
-        },
-        {
-          "rank": 6,
-          "slug": "nonce-capital",
-          "implied_value_usd": 75323884
-        },
-        {
-          "rank": 7,
-          "slug": "onre",
-          "implied_value_usd": 60130582
-        },
-        {
-          "rank": 8,
-          "slug": "bittensor-dtao",
-          "implied_value_usd": 56414103
-        },
-        {
-          "rank": 9,
-          "slug": "symbiotic",
-          "implied_value_usd": 55106874
-        },
-        {
-          "rank": 10,
-          "slug": "opentrade",
-          "implied_value_usd": 51414515
-        },
-        {
-          "rank": 11,
-          "slug": "rockawayx",
-          "implied_value_usd": 49462359
-        },
-        {
-          "rank": 12,
-          "slug": "plume-vaults",
-          "implied_value_usd": 45488565
-        },
-        {
-          "rank": 13,
-          "slug": "hive-protocol",
-          "implied_value_usd": 44235571
-        },
-        {
-          "rank": 14,
-          "slug": "hyperithm",
-          "implied_value_usd": 43268947
-        },
-        {
-          "rank": 15,
-          "slug": "k3-capital",
-          "implied_value_usd": 39611543
-        },
-        {
-          "rank": 16,
-          "slug": "lightning-network",
-          "implied_value_usd": 37915501
-        },
-        {
-          "rank": 17,
-          "slug": "r25",
-          "implied_value_usd": 33382885
-        },
-        {
-          "rank": 18,
-          "slug": "b14g",
-          "implied_value_usd": 31820423
-        },
-        {
-          "rank": 19,
-          "slug": "lagoon",
-          "implied_value_usd": 31703864
-        },
-        {
-          "rank": 20,
-          "slug": "clearstar",
-          "implied_value_usd": 30658694
-        }
-      ],
-      "trackedRanks": {
-        "polymarket-international": null,
-        "gauntlet": 2,
-        "sentora-curator": null
-      }
-    },
-    "noGrowth": {
-      "boardSize": 177,
-      "top20OverlapWithBaseline": "19/20",
-      "top20": [
-        {
-          "rank": 1,
-          "slug": "steakhouse-financial",
-          "implied_value_usd": 470080268
-        },
-        {
-          "rank": 2,
-          "slug": "veda",
-          "implied_value_usd": 277728560
-        },
-        {
-          "rank": 3,
-          "slug": "gauntlet",
-          "implied_value_usd": 269296945
-        },
-        {
-          "rank": 4,
-          "slug": "usdd",
-          "implied_value_usd": 185821851
-        },
-        {
-          "rank": 5,
-          "slug": "upshift",
-          "implied_value_usd": 91698713
-        },
-        {
-          "rank": 6,
-          "slug": "bittensor-dtao",
-          "implied_value_usd": 79892761
-        },
-        {
-          "rank": 7,
-          "slug": "nonce-capital",
-          "implied_value_usd": 67714905
-        },
-        {
-          "rank": 8,
-          "slug": "onre",
-          "implied_value_usd": 66055001
-        },
-        {
-          "rank": 9,
-          "slug": "opentrade",
-          "implied_value_usd": 56978525
-        },
-        {
-          "rank": 10,
-          "slug": "plume-vaults",
-          "implied_value_usd": 50779661
-        },
-        {
-          "rank": 11,
-          "slug": "symbiotic",
-          "implied_value_usd": 50144777
-        },
-        {
-          "rank": 12,
-          "slug": "rockawayx",
-          "implied_value_usd": 42846265
-        },
-        {
-          "rank": 13,
-          "slug": "hive-protocol",
-          "implied_value_usd": 39859905
-        },
-        {
-          "rank": 14,
-          "slug": "hyperithm",
-          "implied_value_usd": 37831736
-        },
-        {
-          "rank": 15,
-          "slug": "r25",
-          "implied_value_usd": 36637085
-        },
-        {
-          "rank": 16,
-          "slug": "k3-capital",
-          "implied_value_usd": 35454457
-        },
-        {
-          "rank": 17,
-          "slug": "lightning-network",
-          "implied_value_usd": 34158432
-        },
-        {
-          "rank": 18,
-          "slug": "tori-finance",
-          "implied_value_usd": 33033887
-        },
-        {
-          "rank": 19,
-          "slug": "b14g",
-          "implied_value_usd": 31741610
-        },
-        {
-          "rank": 20,
-          "slug": "axis",
-          "implied_value_usd": 28984751
-        }
-      ],
-      "trackedRanks": {
-        "polymarket-international": null,
-        "gauntlet": 3,
-        "sentora-curator": null
-      }
-    },
-    "noMaturity": {
-      "boardSize": 177,
-      "top20OverlapWithBaseline": "19/20",
-      "top20": [
-        {
-          "rank": 1,
-          "slug": "steakhouse-financial",
-          "implied_value_usd": 582352442
-        },
-        {
-          "rank": 2,
-          "slug": "gauntlet",
-          "implied_value_usd": 346834989
-        },
-        {
-          "rank": 3,
-          "slug": "veda",
-          "implied_value_usd": 320408444
-        },
-        {
-          "rank": 4,
-          "slug": "usdd",
-          "implied_value_usd": 222564866
-        },
-        {
-          "rank": 5,
-          "slug": "bittensor-dtao",
-          "implied_value_usd": 124541500
-        },
-        {
-          "rank": 6,
-          "slug": "upshift",
-          "implied_value_usd": 111140259
-        },
-        {
-          "rank": 7,
-          "slug": "nonce-capital",
-          "implied_value_usd": 104500259
-        },
-        {
-          "rank": 8,
-          "slug": "onre",
-          "implied_value_usd": 84920625
-        },
-        {
-          "rank": 9,
-          "slug": "opentrade",
-          "implied_value_usd": 65814986
-        },
-        {
-          "rank": 10,
-          "slug": "rockawayx",
-          "implied_value_usd": 61742782
-        },
-        {
-          "rank": 11,
-          "slug": "plume-vaults",
-          "implied_value_usd": 57230977
-        },
-        {
-          "rank": 12,
-          "slug": "r25",
-          "implied_value_usd": 54544561
-        },
-        {
-          "rank": 13,
-          "slug": "tori-finance",
-          "implied_value_usd": 51821176
-        },
-        {
-          "rank": 14,
-          "slug": "symbiotic",
-          "implied_value_usd": 51023619
-        },
-        {
-          "rank": 15,
-          "slug": "axis",
-          "implied_value_usd": 46439553
-        },
-        {
-          "rank": 16,
-          "slug": "hyperithm",
-          "implied_value_usd": 46350450
-        },
-        {
-          "rank": 17,
-          "slug": "lightning-network",
-          "implied_value_usd": 44217042
-        },
-        {
-          "rank": 18,
-          "slug": "k3-capital",
-          "implied_value_usd": 42432576
-        },
-        {
-          "rank": 19,
-          "slug": "hive-protocol",
-          "implied_value_usd": 40335702
-        },
-        {
-          "rank": 20,
-          "slug": "saturn",
-          "implied_value_usd": 32869276
-        }
-      ],
-      "trackedRanks": {
-        "polymarket-international": null,
-        "gauntlet": 2,
-        "sentora-curator": null
-      }
+    "radar3": {
+      "n": 128,
+      "medianAbsLog10Error": 0.6139,
+      "medianAbsLog10Error_x": 4.1103,
+      "within2x": 0.2891,
+      "within3x": 0.4453,
+      "within5x": 0.5781
     }
   },
-  "peerTable": [
-    {
-      "category": "Lending",
-      "peers": 15,
-      "median_multiple_raw": 0.1324,
-      "median_multiple_used": 0.1324
-    },
-    {
-      "category": "Dexs",
-      "peers": 11,
-      "median_multiple_raw": 0.3424,
-      "median_multiple_used": 0.3424
-    },
-    {
-      "category": "Liquid Staking",
-      "peers": 9,
-      "median_multiple_raw": 0.0406,
-      "median_multiple_used": 0.0406
-    },
-    {
-      "category": "Yield",
-      "peers": 9,
-      "median_multiple_raw": 0.1914,
-      "median_multiple_used": 0.1914
-    },
-    {
-      "category": "CEX",
-      "peers": 9,
-      "median_multiple_raw": 0.0748,
-      "median_multiple_used": 0.0748
-    },
-    {
-      "category": "RWA",
-      "peers": 9,
-      "median_multiple_raw": 0.2748,
-      "median_multiple_used": 0.2748
-    },
-    {
-      "category": "Canonical Bridge",
-      "peers": 8,
-      "median_multiple_raw": 0.7464,
-      "median_multiple_used": 0.7464
-    },
-    {
-      "category": "Basis Trading",
-      "peers": 7,
-      "median_multiple_raw": 0.6544,
-      "median_multiple_used": 0.6544
-    },
-    {
-      "category": "Bridge",
-      "peers": 6,
-      "median_multiple_raw": 0.5567,
-      "median_multiple_used": 0.5567
-    }
-  ],
-  "peerTableAllCategories": [
-    {
-      "category": "Lending",
-      "peers": 15,
-      "median_multiple_raw": 0.1324
-    },
-    {
-      "category": "Dexs",
-      "peers": 11,
-      "median_multiple_raw": 0.3424
-    },
-    {
-      "category": "Liquid Staking",
-      "peers": 9,
-      "median_multiple_raw": 0.0406
-    },
-    {
-      "category": "Yield",
-      "peers": 9,
-      "median_multiple_raw": 0.1914
-    },
-    {
-      "category": "CEX",
-      "peers": 9,
-      "median_multiple_raw": 0.0748
-    },
-    {
-      "category": "RWA",
-      "peers": 9,
-      "median_multiple_raw": 0.2748
-    },
-    {
-      "category": "Canonical Bridge",
-      "peers": 8,
-      "median_multiple_raw": 0.7464
-    },
-    {
-      "category": "Basis Trading",
-      "peers": 7,
-      "median_multiple_raw": 0.6544
-    },
-    {
-      "category": "Bridge",
-      "peers": 6,
-      "median_multiple_raw": 0.5567
-    },
-    {
-      "category": "Cross Chain Bridge",
-      "peers": 4,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Yield Aggregator",
-      "peers": 4,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Indexes",
-      "peers": 3,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "CDP",
-      "peers": 3,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Privacy",
-      "peers": 3,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Restaking",
-      "peers": 2,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Onchain Capital Allocator",
-      "peers": 2,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Token Locker",
-      "peers": 2,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Derivatives",
-      "peers": 2,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Liquid Restaking",
-      "peers": 2,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "AI Agents",
-      "peers": 2,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Staking Pool",
-      "peers": 2,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Payments",
-      "peers": 2,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Liquidity Manager",
-      "peers": 1,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Collateral Management",
-      "peers": 1,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Risk Curators",
-      "peers": 1,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Chain",
-      "peers": 1,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "NFT Marketplace",
-      "peers": 1,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Decentralized AI",
-      "peers": 1,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Dual-Token Stablecoin",
-      "peers": 1,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Options",
-      "peers": 1,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Launchpad",
-      "peers": 1,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Prediction Market",
-      "peers": 1,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "DOR",
-      "peers": 1,
-      "median_multiple_raw": 0.2138
-    },
-    {
-      "category": "Leveraged Farming",
-      "peers": 1,
-      "median_multiple_raw": 0.2138
-    }
-  ],
+  "randomTrialsTuning": {
+    "trials": 100,
+    "seedBase": 20261114,
+    "step": 7919,
+    "radar4MeanMedianErr": 0.5197,
+    "radar4MeanMedianErr_x": 3.3089,
+    "radar3MeanMedianErr": 0.5646,
+    "radar3MeanMedianErr_x": 3.6694,
+    "pairedDiffMean": -0.0449,
+    "pairedDiffSE": 0.0034,
+    "pairedDiff95CI": [
+      -0.0517,
+      -0.0381
+    ],
+    "radar4Wins": 91
+  },
+  "randomTrialsFresh": {
+    "trials": 100,
+    "seedBase": 777001,
+    "step": 104729,
+    "radar4MeanMedianErr": 0.5217,
+    "radar4MeanMedianErr_x": 3.3241,
+    "radar3MeanMedianErr": 0.5592,
+    "radar3MeanMedianErr_x": 3.6245,
+    "pairedDiffMean": -0.0376,
+    "pairedDiffSE": 0.0033,
+    "pairedDiff95CI": [
+      -0.044,
+      -0.0311
+    ],
+    "radar4Wins": 88
+  },
   "board": {
-    "baselineSize": 177,
-    "baselineTop20": [
+    "radar4Size": 180,
+    "radar3Size": 180,
+    "radar4Top20": [
       {
         "rank": 1,
         "slug": "steakhouse-financial",
-        "implied_value_usd": 464924662
+        "implied_value_usd": 80404731
       },
       {
         "rank": 2,
         "slug": "gauntlet",
-        "implied_value_usd": 276897852
+        "implied_value_usd": 61530702
       },
       {
         "rank": 3,
         "slug": "veda",
-        "implied_value_usd": 266216989
+        "implied_value_usd": 59399633
       },
       {
         "rank": 4,
         "slug": "usdd",
-        "implied_value_usd": 183214585
+        "implied_value_usd": 46912184
       },
       {
         "rank": 5,
         "slug": "upshift",
-        "implied_value_usd": 95509574
+        "implied_value_usd": 35624629
       },
       {
         "rank": 6,
-        "slug": "bittensor-dtao",
-        "implied_value_usd": 77272598
+        "slug": "onre",
+        "implied_value_usd": 28897166
       },
       {
         "rank": 7,
-        "slug": "onre",
-        "implied_value_usd": 66090736
+        "slug": "opentrade",
+        "implied_value_usd": 27601872
       },
       {
         "rank": 8,
-        "slug": "nonce-capital",
-        "implied_value_usd": 64417968
+        "slug": "plume-vaults",
+        "implied_value_usd": 25920551
       },
       {
         "rank": 9,
-        "slug": "opentrade",
-        "implied_value_usd": 56510731
+        "slug": "bitfi-basis",
+        "implied_value_usd": 24140704
       },
       {
         "rank": 10,
-        "slug": "plume-vaults",
-        "implied_value_usd": 49997400
+        "slug": "symbiotic",
+        "implied_value_usd": 23825686
+      },
+      {
+        "rank": 11,
+        "slug": "nonce-capital",
+        "implied_value_usd": 23715777
+      },
+      {
+        "rank": 12,
+        "slug": "hive-protocol",
+        "implied_value_usd": 21353196
+      },
+      {
+        "rank": 13,
+        "slug": "lofty",
+        "implied_value_usd": 20084405
+      },
+      {
+        "rank": 14,
+        "slug": "rockawayx",
+        "implied_value_usd": 20066403
+      },
+      {
+        "rank": 15,
+        "slug": "hyperithm",
+        "implied_value_usd": 19888029
+      },
+      {
+        "rank": 16,
+        "slug": "r25",
+        "implied_value_usd": 19587881
+      },
+      {
+        "rank": 17,
+        "slug": "k3-capital",
+        "implied_value_usd": 18746519
+      },
+      {
+        "rank": 18,
+        "slug": "lagoon",
+        "implied_value_usd": 17305637
+      },
+      {
+        "rank": 19,
+        "slug": "b14g",
+        "implied_value_usd": 16310993
+      },
+      {
+        "rank": 20,
+        "slug": "clearstar",
+        "implied_value_usd": 16236826
+      }
+    ],
+    "radar3Top20": [
+      {
+        "rank": 1,
+        "slug": "bittensor-dtao",
+        "implied_value_usd": 225656411
+      },
+      {
+        "rank": 2,
+        "slug": "steakhouse-financial",
+        "implied_value_usd": 71161725
+      },
+      {
+        "rank": 3,
+        "slug": "gauntlet",
+        "implied_value_usd": 55305310
+      },
+      {
+        "rank": 4,
+        "slug": "veda",
+        "implied_value_usd": 53403308
+      },
+      {
+        "rank": 5,
+        "slug": "usdd",
+        "implied_value_usd": 44334718
+      },
+      {
+        "rank": 6,
+        "slug": "curvance",
+        "implied_value_usd": 42085685
+      },
+      {
+        "rank": 7,
+        "slug": "bitfi-basis",
+        "implied_value_usd": 35423073
+      },
+      {
+        "rank": 8,
+        "slug": "upshift",
+        "implied_value_usd": 33058891
+      },
+      {
+        "rank": 9,
+        "slug": "tydro",
+        "implied_value_usd": 30823385
+      },
+      {
+        "rank": 10,
+        "slug": "nado-spot",
+        "implied_value_usd": 28114656
       },
       {
         "rank": 11,
         "slug": "symbiotic",
-        "implied_value_usd": 47128117
+        "implied_value_usd": 22527999
       },
       {
         "rank": 12,
-        "slug": "rockawayx",
-        "implied_value_usd": 42300854
+        "slug": "nonce-capital",
+        "implied_value_usd": 21990022
       },
       {
         "rank": 13,
-        "slug": "hive-protocol",
-        "implied_value_usd": 37830837
+        "slug": "onre",
+        "implied_value_usd": 21963725
       },
       {
         "rank": 14,
-        "slug": "hyperithm",
-        "implied_value_usd": 37004167
+        "slug": "opentrade",
+        "implied_value_usd": 21563920
       },
       {
         "rank": 15,
-        "slug": "r25",
-        "implied_value_usd": 36691803
+        "slug": "plume-vaults",
+        "implied_value_usd": 20552282
       },
       {
         "rank": 16,
-        "slug": "k3-capital",
-        "implied_value_usd": 33876308
+        "slug": "hive-protocol",
+        "implied_value_usd": 20327749
       },
       {
         "rank": 17,
-        "slug": "tori-finance",
-        "implied_value_usd": 33799711
+        "slug": "rockawayx",
+        "implied_value_usd": 18899178
       },
       {
         "rank": 18,
-        "slug": "lightning-network",
-        "implied_value_usd": 32425831
+        "slug": "hyperithm",
+        "implied_value_usd": 18875865
       },
       {
         "rank": 19,
-        "slug": "axis",
-        "implied_value_usd": 29322655
+        "slug": "k3-capital",
+        "implied_value_usd": 17824504
       },
       {
         "rank": 20,
-        "slug": "lofty",
-        "implied_value_usd": 27793601
+        "slug": "tori-finance",
+        "implied_value_usd": 17583412
       }
     ],
-    "top100Slugs": [
-      "steakhouse-financial",
-      "gauntlet",
-      "veda",
-      "usdd",
-      "upshift",
-      "bittensor-dtao",
-      "onre",
-      "nonce-capital",
-      "opentrade",
-      "plume-vaults",
-      "symbiotic",
-      "rockawayx",
-      "hive-protocol",
-      "hyperithm",
-      "r25",
-      "k3-capital",
-      "tori-finance",
-      "lightning-network",
-      "axis",
-      "lofty",
-      "b14g",
-      "lagoon",
-      "clearstar",
-      "saturn",
-      "galaxy-curation",
-      "valos",
-      "aegis-yusd",
-      "ember",
-      "manta-cedefi",
-      "doppler-finance",
-      "armitage-by-wintermute",
-      "liminal-basis",
-      "curvance",
-      "noble",
-      "drakewell",
-      "reti-pooling",
-      "keyrock",
-      "tydro",
-      "infinifi",
-      "gami-labs",
-      "project-x",
-      "shift-defi",
-      "arrakis-modular",
-      "tulipa-capital",
-      "xrpl-dex",
-      "yuzu-money",
-      "re7-labs",
-      "firelight",
-      "mezo-earn",
-      "exponent-yield-exchange",
-      "vishwa",
-      "noon",
-      "makina",
-      "ultrayield-curator",
-      "flux-finance",
-      "3f",
-      "felix-vaults",
-      "bouncebit-prime",
-      "vfat.io",
-      "apex-omni",
-      "plasma-saving-vaults",
-      "agni-finance",
-      "plasma-one",
-      "origami-finance",
-      "anemoy-capital",
-      "lulo",
-      "hylo-protocol",
-      "project-0",
-      "decibel",
-      "d2-finance",
-      "current",
-      "bisonfi",
-      "august-digital",
-      "chain-fusion",
-      "tempo-stablecoin-dex",
-      "communityv3",
-      "fstswap",
-      "y10k-capital",
-      "neutral-trade",
-      "manifest-trade",
-      "zoo-finance",
-      "theo-network-thbill",
-      "xion-finance",
-      "stellar-dex",
-      "avant-aveth",
-      "sygnum-fiusd-liquidity-fund",
-      "marginfi-lending",
-      "estate-protocol",
-      "gmx-solana",
-      "rif-on-chain",
-      "adrastea-validator",
-      "phoenix-perp",
-      "flowdesk",
-      "gamma-research",
-      "mystic-finance-lending",
-      "nuva",
-      "felix-cdp",
-      "waterline",
-      "risex",
-      "hyperbeat-earn"
-    ]
+    "top20OverlapRadar4vsRadar3": "15/20",
+    "top100OverlapRadar4vsRadar3": "96/100",
+    "radar4ClampedRows": 0,
+    "radar3ClampedRows": 1,
+    "dtao": {
+      "radar4": {
+        "rank": 21,
+        "implied_value_usd": 16105777,
+        "rawRatio": 0.0714,
+        "clamped": false
+      },
+      "radar3": {
+        "rank": 1,
+        "implied_value_usd": 225656411,
+        "rawRatio": 3.6556,
+        "clamped": true
+      }
+    }
   },
   "interpretation": [
-    "Split-half (n=128 tokenised peers, mcap_usd>0 and tvl_usd>=$5M, sorted by slug, split 64/64, both directions pooled): the FULL peer-multiple model (multiple x growth x maturity) predicts held-out mcap with median error 0.6804 in log10, i.e. a factor of 4.79x; median absolute pct error 90.4%; only 25.8% within 2x, 37.5% within 3x, 50.8% within 5x. TARGET median error <=3x NOT ACHIEVED on the sealed snapshot.",
-    "Direction average is slightly worse (0.6959 log10, 5.02x). The sealed result is slightly worse than the 17 Nov public prototype (0.639 log10, ~3.35x, within 3x 38.2%), and it does NOT reproduce the \"about 3.3x\" figure quoted in lib/model.ts — the coordinator should correct or justify that figure; this deterministic split-half gives ~4.8x.",
-    "Growth and maturity barely move accuracy: TVL-only (multiple alone) pooled median error is 0.6890 log10 (4.89x) vs 0.6804 for the full model; within 3x 32.8% vs 37.5%. The multipliers are a small refinement on top of the peer multiple, not the source of the error — the error is the dispersion of mcap/TVL itself within categories.",
-    "Sensitivity: the sealed top-20 is fairly stable across variants — flat 0.25 overlaps 17/20 with the peer-multiple baseline, no-growth 19/20, no-maturity 19/20. The top 5 (steakhouse-financial, gauntlet, veda, usdd, upshift) appear in every variant; only their order shifts. Gauntlet is rank 2 (baseline/flat/no-maturity) and 3 (no-growth). No variant rescues the valuation error above — stability of the ranking is not accuracy of the values.",
-    "Polymarket and Sentora are NOT on the sealed board at all: polymarket-international (TVL $320,193,439) and sentora-curator (TVL $2,757,585,593) sit above the $50M floor and are not in the 40-slug watchlist, so buildBoard never selects them. Any sensitivity \"rank\" for them is N/A, not 0 — the board simply does not cover above-floor non-watchlist protocols.",
-    "Board is a RANKING SIGNAL, not a valuation: a typical implied value is wrong by a factor of ~5. The dossier/dashboard must say so and must not quote implied values as if they were prices. Peer multiples vary ~18x across categories with n>=5 (Liquid Staking 0.0406 to Canonical Bridge 0.7464), which is why the peer multiple beats a flat 0.25 for ranking even though neither values anything precisely."
+    "Deterministic split-half (n=128, slug-sorted 64/64, both directions pooled): radar-4 median error 0.5147 log10 (3.27x) vs radar-3 0.5088 (3.23x) — statistically tied on this ONE split; a single split-half median has a standard error of roughly 0.03-0.04 log10, so a 0.006 gap is noise, not a verdict.",
+    "Leave-one-out (train 127, test 1, all 128): radar-4 0.5029 log10 (3.18x) vs radar-3 0.6139 (4.11x). Radar-3 loses here because its per-category slopes are fitted on 5-15 peers and collapse when the test peer leaves its category thin; radar-4 has one slope and median intercepts, so it barely moves.",
+    "Random split-half trials (100, paired): radar-4 mean median error 0.520 (3.31x) vs radar-3 0.565 (3.67x), paired difference -0.045 +/- 0.003, radar-4 wins 91/100. On 100 FRESH trials (seeds never used for tuning): radar-4 0.522 (3.32x) vs radar-3 0.559 (3.62x), paired -0.038 +/- 0.003, wins 88/100. The improvement is real but modest (~7% relative); it is NOT a jump to sub-3x.",
+    "Board: radar-4 top is Steakhouse $80M, Gauntlet $62M, Veda $59M — a smooth gradient with ZERO clamped rows. Radar-3 top is Bittensor dTAO $226M (raw ratio 3.66, clamped to 1.00), 3.2x its own #2 row: a clamp artefact a judge can spot. Under radar-4 dTAO ranks 21st at $16M. Top-20 overlap 15/20, top-100 overlap 96/100 — the board is stable except the artefact is gone.",
+    "TARGET median error <=3x STILL NOT ACHIEVED (best honest protocol: LOO 3.18x, split-half 3.27x, trial mean 3.31x). The board remains a RANKING SIGNAL, not a valuation. No further model in this family (per-category slopes, LAD, Huber, kNN, winsorised OLS, age/growth buckets, feature OLS, blends) beat radar-4 on leave-one-out AND both trial sets; the residual dispersion of mcap/TVL within categories (~100x) is the binding constraint, not the estimator."
   ]
 }

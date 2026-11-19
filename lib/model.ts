@@ -8,16 +8,29 @@
 //
 // Implied value follows only from the snapshot's own figures, never from a hardcoded list of names:
 //
-//   log-log fit   = OLS ln(mcap_usd) = a + b x ln(tvl_usd) over tokenised peers
-//                   (mcap_usd > 0, tvl_usd >= $5M; n = 128 in the sealed snapshot),
-//                   fitted per category when the category has >= 5 peers, else the
-//                   global fit; categories with 5 <= n < 10 are shrunk toward the
-//                   global fit with w = n / (n + 5): a* = w x a_cat + (1-w) x a_global,
-//                   b* = w x b_cat + (1-w) x b_global; n >= 10 uses the category fit
-//                   unshrunk. The fit is computed from the snapshot at runtime —
-//                   deterministic, no network, no hardcoded slopes.
-//   ratio         = clamp(exp(a* + b* x ln(TVL)) / TVL, [0.02, 1.00]) — the same
-//                   clamp the old median-peer model used, so one odd category cannot
+//   slope-median fit = ln(mcap) = a_cat + 0.55 x ln(TVL), fitted on the snapshot's
+//                   tokenised peers (mcap_usd > 0, tvl_usd >= $5M; n = 128 in the
+//                   sealed snapshot) after trimming the peers whose log(mcap/TVL)
+//                   falls outside the central 60% (winsor q = 0.20 both tails:
+//                   78 of 128 peers kept for fitting). The slope is ONE number for
+//                   every category, chosen by cross-validation (grid 0.45-0.80 on
+//                   100 seeded split-half trials; the plateau 0.52-0.60 is flat
+//                   within noise and 0.55 is its midpoint), NOT fitted per
+//                   category: per-category OLS slopes on 5-15 peers are noise
+//                   (slope SE ~0.2-0.36) and the old radar-3 per-category log-log
+//                   fit lost to this model on leave-one-out (0.6139 -> 0.5029
+//                   log10) and on 200 seeded split-half trials. a_cat is the
+//                   MEDIAN of (ln(mcap) - 0.55 x ln(TVL)) over the trimmed peers
+//                   of the category, shrunk toward the global median intercept
+//                   with w = n / (n + 10) for EVERY category, however few trimmed
+//                   peers it has (a 1-peer category still contributes at w = 1/11;
+//                   small categories carry real signal — e.g. Canonical Bridge's
+//                   intercept 7.115 vs the global 6.638 — so no n<5 gate to the
+//                   global intercept exists in this model). The fit is computed
+//                   from the snapshot at runtime — deterministic, no network, no
+//                   hardcoded intercepts.
+//   ratio         = clamp(exp(a_cat + 0.55 x ln(TVL)) / TVL, [0.02, 1.00]) — the same
+//                   clamp the old models used, so one odd category cannot
 //                   explode a row
 //   base          = tvl_usd x ratio
 //   growth        = clamp(change_7d, -60, 120) per cent
@@ -25,20 +38,30 @@
 //   maturity      = 0.6 + min(age_days, 1095) / 1095 x 0.4   (age_days unknown: 365)
 //   implied       = max(1, round(base x growthMult x maturity))
 //
-// Why log-log instead of the old flat median multiple per category: the market's
-// mcap does not scale 1-for-1 with TVL — the fitted slopes run ~0.15 to ~1.7 by
-// category (global ~0.52 on all 128 peers), so a flat ratio overstates small
-// protocols and understates large ones in steep categories (Lending, Dexs).
-// The log-log fit is the snapshot's own answer to "what does the market pay,
-// per dollar of TVL, for a token in this line of business, at this size?"
+// Why one slope + median intercepts instead of per-category log-log (radar-3):
+// the market's mcap does not scale 1-for-1 with TVL, but the slope is NOT
+// identifiable per category from 5-15 noisy peers — radar-3's Dexs slope of
+// ~1.78 sent Bittensor dTAO (TVL $376M, 56 days old, 7d -6.6%) to rank #1 at
+// $226M with a raw ratio of 3.66 clamped to 1.00: the board's #1 row was a
+// clamp artefact, 3.2x the #2 row. Under this model no board row hits the
+// clamp, dTAO ranks 21st at $16M, and the top of the board is a smooth
+// gradient (Steakhouse $80M, Gauntlet $62M, Veda $59M). Median intercepts
+// are also robust where OLS means are not: one peer with mcap/TVL 400
+// (Prediction Market, n = 1) cannot move a median.
 //
 // Honest limit (see dossier + BACKTEST note): split-half validation of this
-// log-log method (x growth x maturity) on the sealed snapshot's 128 tokenised
-// peers gives a median error of 0.5088 log10, about 3.2x (within 2x 32.0%,
-// within 3x 46.1%) — better than the old median-peer baseline's 0.6804 log10,
-// about 4.8x (within 2x 25.8%), but the <=3x target is STILL NOT met, so the
-// board is a ranking signal, not a valuation. The dashboard says so, and no
-// row is presented as a price.
+// method (x growth x maturity) on the sealed snapshot's 128 tokenised
+// peers gives a median error of 0.5147 log10, about 3.3x (within 2x 27.3%,
+// within 3x 47.7%) on the deterministic slug-sorted split — statistically
+// tied with radar-3's 0.5088 (3.2x) on that one split, which is a single
+// noisy draw. The evidence for radar-4 is the average over many splits:
+// leave-one-out 0.5029 log10 (3.18x) vs radar-3's 0.6139 (4.11x), and
+// 100 seeded split-half trials: mean median error 0.520 (3.31x) vs
+// radar-3's 0.565 (3.67x), paired difference -0.045 +/- 0.003, winning
+// 91/100 trials; confirmed on 100 FRESH trials (different seeds):
+// 0.522 (3.32x) vs 0.559 (3.62x), paired -0.038 +/- 0.003, winning 88/100.
+// The <=3x target is STILL NOT met, so the board is a ranking signal, not
+// a valuation. The dashboard says so, and no row is presented as a price.
 //
 // Exclusions are classification rules, applied to every protocol alike:
 //   - category CEX, Bridge, Canonical Bridge, Liquid Staking, Liquid Restaking, Restaked BTC
@@ -91,8 +114,9 @@ export interface ModelConstants {
   maturity_range: number;
   maturity_days: number;
   unknown_age_days: number;
-  loglog_shrink_prior: number;
-  loglog_shrink_max_n: number;
+  slope_median_slope: number;
+  slope_median_winsor_q: number;
+  slope_median_prior: number;
 }
 
 export const MODEL: ModelConstants = {
@@ -106,12 +130,13 @@ export const MODEL: ModelConstants = {
   maturity_range: 0.4,
   maturity_days: 1095,
   unknown_age_days: 365,
-  loglog_shrink_prior: 5,
-  loglog_shrink_max_n: 10,
+  slope_median_slope: 0.55,
+  slope_median_winsor_q: 0.2,
+  slope_median_prior: 10,
 };
 
 /** The model's version label: the dashboard names it and the rules quote it. */
-export const MODEL_VERSION = 'radar-3-loglog';
+export const MODEL_VERSION = 'radar-4-slope-median';
 
 /** How many pre-token protocols below the watchlist floor the early radar carries, by TVL. */
 export const EARLY_ROWS = 360;
@@ -150,9 +175,9 @@ export interface BoardRow {
     growth_multiplier: number;
     maturity_multiplier: number;
     age_days: number | null;
-    loglog_a: number;
-    loglog_b: number;
-    loglog_source: string;
+    slope_a: number;
+    slope_b: number;
+    slope_source: string;
   };
   farm_steps: string[];
 }
@@ -174,9 +199,9 @@ export interface RadarRow {
   peer_category: string;
   growth_multiplier: number;
   maturity_multiplier: number;
-  loglog_a: number;
-  loglog_b: number;
-  loglog_source: string;
+  slope_a: number;
+  slope_b: number;
+  slope_source: string;
 }
 
 /** A live-token protocol: it already trades, so the board shows the market's own value, not a model's. */
@@ -205,8 +230,10 @@ export interface RadarData {
   live: LiveRow[];
   peer_table: { category: string; peers: number; median_multiple: number }[];
   global_multiple: number;
-  loglog_fits: { category: string; peers: number; slope: number; intercept: number; source: string }[];
-  loglog_global: { a: number; b: number; n: number };
+  slope_fits: { category: string; peers: number; slope: number; intercept: number; source: string }[];
+  slope_global: { a: number; b: number; n: number };
+  trimmed_peers: number;
+  total_peers: number;
 }
 
 /** Why the snapshot is not one this model can score. */
@@ -287,103 +314,87 @@ export function peerMultipleFor(
   };
 }
 
-/** One fitted log-log line: ln(mcap) = a + b x ln(TVL). `w` is the shrinkage weight (1 = pure category fit, 0 = global). */
-export interface LogLogFit {
+/** One fitted slope-median line: ln(mcap) = a + b x ln(TVL) with ONE slope b for
+ * every category. `w` is the shrinkage weight (1 = pure category intercept, 0 = global). */
+export interface SlopeMedianFit {
   n: number;
   a: number;
   b: number;
   w: number;
-  slopeCat: number | null;
   source: string;
 }
 
-/** The fitted log-log model: one line per category plus the global line. */
-export interface LogLogModel {
-  byCategory: Map<string, LogLogFit>;
+/** The fitted slope-median model: one intercept per category plus the global intercept. */
+export interface SlopeMedianModel {
+  byCategory: Map<string, SlopeMedianFit>;
   global: { a: number; b: number; n: number };
+  trimmedPeers: number;
+  totalPeers: number;
 }
 
-/** OLS fit of ln(mcap) = a + b x ln(TVL) on a list of peers; null when degenerate (n < 2 or zero variance in x). */
-export function olsLogLog(peers: SnapshotProtocol[]): { a: number; b: number; n: number } | null {
-  const n = peers.length;
-  if (n < 2) return null;
-  const xs = peers.map((p) => Math.log(p.tvl_usd));
-  const ys = peers.map((p) => Math.log(p.mcap_usd as number));
-  const mx = xs.reduce((a, b) => a + b, 0) / n;
-  const my = ys.reduce((a, b) => a + b, 0) / n;
-  let sxx = 0;
-  let sxy = 0;
-  for (let i = 0; i < n; i++) {
-    sxx += (xs[i]! - mx) * (xs[i]! - mx);
-    sxy += (xs[i]! - mx) * (ys[i]! - my);
-  }
-  if (!(sxx > 0) || !Number.isFinite(sxx)) return null;
-  const b = sxy / sxx;
-  const a = my - b * mx;
-  if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
-  return { a, b, n };
+/** The tokenised peers kept for fitting: those whose log(mcap/TVL) falls inside
+ * the central (1 - 2q) of the log-ratio distribution. Peers outside are the
+ * 400x-ratio outliers that would drag any mean-based fit; medians are already
+ * robust, but trimming also keeps a 1-peer category's extreme ratio from
+ * becoming its intercept. Deterministic: quantiles are order statistics. */
+export function trimmedPeers(peers: SnapshotProtocol[], q: number): SnapshotProtocol[] {
+  if (peers.length === 0) return [];
+  const rs = peers.map((p) => Math.log((p.mcap_usd as number) / p.tvl_usd)).sort((a, b) => a - b);
+  const lo = rs[Math.floor(q * rs.length)]!;
+  const hi = rs[Math.ceil((1 - q) * rs.length) - 1]!;
+  return peers.filter((p) => {
+    const r = Math.log((p.mcap_usd as number) / p.tvl_usd);
+    return r >= lo && r <= hi;
+  });
 }
 
 /**
- * Fit per-category log-log models on the snapshot's tokenised peers
- * (mcap_usd > 0, tvl_usd >= $5M) — the exact method of scripts/loglog-test.mjs:
- * n >= 10 uses the category fit unshrunk; 5 <= n < 10 shrinks toward the global
- * fit with w = n / (n + shrink_prior); n < 5 uses the global fit. A category
- * unseen here (or a degenerate fit) falls back to the global fit.
+ * Fit the slope-median model on the snapshot's tokenised peers
+ * (mcap_usd > 0, tvl_usd >= $5M) — the exact method of scripts/backtest.mjs:
+ * trim to the central 60% of log(mcap/TVL); the slope is the single constant
+ * model.slope_median_slope (0.55, cross-validated, see the header note);
+ * a_cat is the median of (ln(mcap) - b x ln(TVL)) over the trimmed peers of
+ * the category, shrunk toward the global median intercept with
+ * w = n / (n + slope_median_prior); this shrinkage applies to EVERY category,
+ * however few trimmed peers it has (a 1-peer category still contributes at
+ * w = 1/11 with prior 10). A category unseen here falls back to the global fit.
  */
-export function fitLogLog(protocols: SnapshotProtocol[], model: ModelConstants): LogLogModel {
+export function fitSlopeMedian(protocols: SnapshotProtocol[], model: ModelConstants): SlopeMedianModel {
   const peers = protocols.filter((p) => (p.mcap_usd ?? 0) > 0 && p.tvl_usd >= 5_000_000);
-  const global = olsLogLog(peers) ?? { a: 0, b: 0, n: 0 };
-  const byCat = new Map<string, LogLogFit>();
+  const trimmed = trimmedPeers(peers, model.slope_median_winsor_q);
+  const b = model.slope_median_slope;
+  const globalA = trimmed.length > 0 ? median(trimmed.map((p) => Math.log(p.mcap_usd as number) - b * Math.log(p.tvl_usd))) : 0;
+  const byCat = new Map<string, SlopeMedianFit>();
   const cats = new Map<string, SnapshotProtocol[]>();
-  for (const p of peers) {
+  for (const p of trimmed) {
     const cat = p.category ?? 'Unknown';
     if (!cats.has(cat)) cats.set(cat, []);
     cats.get(cat)!.push(p);
   }
   for (const [cat, members] of cats) {
     const n = members.length;
-    if (n < model.peer_min_peers) {
-      byCat.set(cat, { n, a: global.a, b: global.b, w: 0, slopeCat: null, source: 'global (n<5)' });
-      continue;
-    }
-    const catFit = olsLogLog(members);
-    if (catFit === null) {
-      byCat.set(cat, { n, a: global.a, b: global.b, w: 0, slopeCat: null, source: 'global (degenerate fit)' });
-      continue;
-    }
-    if (n >= model.loglog_shrink_max_n) {
-      byCat.set(cat, { n, a: catFit.a, b: catFit.b, w: 1, slopeCat: catFit.b, source: 'category (n>=10)' });
-    } else {
-      const w = n / (n + model.loglog_shrink_prior);
-      byCat.set(cat, {
-        n,
-        a: w * catFit.a + (1 - w) * global.a,
-        b: w * catFit.b + (1 - w) * global.b,
-        w,
-        slopeCat: catFit.b,
-        source: `shrunk w=${Math.round(w * 1e4) / 1e4}`,
-      });
-    }
+    const catA = median(members.map((p) => Math.log(p.mcap_usd as number) - b * Math.log(p.tvl_usd)));
+    const w = n / (n + model.slope_median_prior);
+    byCat.set(cat, { n, a: w * catA + (1 - w) * globalA, b, w, source: `shrunk w=${Math.round(w * 1e4) / 1e4}` });
   }
-  return { byCategory: byCat, global };
+  return { byCategory: byCat, global: { a: globalA, b, n: trimmed.length }, trimmedPeers: trimmed.length, totalPeers: peers.length };
 }
 
-/** The log-log line one protocol gets, plus the peer category/count it reports. */
-export function loglogFitFor(
+/** The slope-median line one protocol gets, plus the peer category/count it reports. */
+export function slopeMedianFitFor(
   category: string | null,
-  fit: LogLogModel,
+  fit: SlopeMedianModel,
 ): { a: number; b: number; peerCategory: string; peerCount: number; source: string } {
   const cat = category ?? 'Unknown';
   const entry = fit.byCategory.get(cat);
-  if (entry !== undefined && entry.n >= 5) {
+  if (entry !== undefined) {
     return { a: entry.a, b: entry.b, peerCategory: cat, peerCount: entry.n, source: entry.source };
   }
   return { a: fit.global.a, b: fit.global.b, peerCategory: 'GLOBAL', peerCount: fit.global.n, source: 'global' };
 }
 
 /** The clamped predicted mcap/TVL ratio from a fitted line at a given TVL. */
-export function loglogRatio(tvl: number, a: number, b: number, model: ModelConstants): number {
+export function slopeMedianRatio(tvl: number, a: number, b: number, model: ModelConstants): number {
   const raw = Math.exp(a + b * Math.log(tvl)) / tvl;
   return Math.min(model.peer_multiple_cap, Math.max(model.peer_multiple_floor, raw));
 }
@@ -393,7 +404,7 @@ export function impliedValue(
   protocol: SnapshotProtocol,
   asOf: string,
   model: ModelConstants,
-  fit: LogLogModel,
+  fit: SlopeMedianModel,
 ): {
   implied: number;
   peerMultiple: number;
@@ -403,13 +414,13 @@ export function impliedValue(
   growthMult: number;
   maturityMult: number;
   age: number | null;
-  loglogA: number;
-  loglogB: number;
-  loglogSource: string;
+  slopeA: number;
+  slopeB: number;
+  slopeSource: string;
 } {
   const age = ageDays(asOf, protocol.listed_at);
-  const f = loglogFitFor(protocol.category, fit);
-  const multiple = loglogRatio(protocol.tvl_usd, f.a, f.b, model);
+  const f = slopeMedianFitFor(protocol.category, fit);
+  const multiple = slopeMedianRatio(protocol.tvl_usd, f.a, f.b, model);
   const rawGrowth = finite(protocol.change_7d, 0);
   const growthPct = Math.min(model.growth_cap, Math.max(model.growth_floor, rawGrowth));
   const growthMult = 1 + (growthPct / 100) * model.growth_weight;
@@ -418,7 +429,7 @@ export function impliedValue(
     model.maturity_floor + (Math.min(Math.max(ageForModel, 0), model.maturity_days) / model.maturity_days) * model.maturity_range;
   const base = protocol.tvl_usd * multiple;
   const implied = Math.max(1, Math.round(base * growthMult * maturityMult));
-  return { implied, peerMultiple: multiple, peerCategory: f.peerCategory, peerCount: f.peerCount, growthPct, growthMult, maturityMult, age, loglogA: f.a, loglogB: f.b, loglogSource: f.source };
+  return { implied, peerMultiple: multiple, peerCategory: f.peerCategory, peerCount: f.peerCount, growthPct, growthMult, maturityMult, age, slopeA: f.a, slopeB: f.b, slopeSource: f.source };
 }
 
 /** DefiLlama's version-marker rule: a name ending in a release is a pool of another protocol. */
@@ -522,7 +533,7 @@ function bySlug(protocols: SnapshotProtocol[]): Map<string, SnapshotProtocol> {
 /** The protocols the board ranks, strongest first, with ranks 1..n. */
 export function buildBoard(snapshot: Snapshot, model: ModelConstants = MODEL): BoardRow[] {
   const index = bySlug(snapshot.protocols);
-  const fit = fitLogLog(snapshot.protocols, model);
+  const fit = fitSlopeMedian(snapshot.protocols, model);
   const chosen = new Map<string, SnapshotProtocol>();
   // The watchlist is the floor: every slug, even one the snapshot no longer carries (it cannot, but
   // the board's coverage is the gate's row and is never gambled on a missing record).
@@ -569,9 +580,9 @@ export function buildBoard(snapshot: Snapshot, model: ModelConstants = MODEL): B
       growth_multiplier: round4(s.growthMult),
       maturity_multiplier: round4(s.maturityMult),
       age_days: s.age,
-      loglog_a: s.loglogA,
-      loglog_b: s.loglogB,
-      loglog_source: s.loglogSource,
+      slope_a: s.slopeA,
+      slope_b: s.slopeB,
+      slope_source: s.slopeSource,
     },
     farm_steps: farmSteps(s.p, s.age, s.implied, i + 1).map(stepText),
   }));
@@ -686,12 +697,13 @@ export interface FarmParams {
 
 /**
  * The farm scenario's calibrated parameters. Calibrated 17 Nov 2026 on the sealed
- * board (180 rows, log-log implied values): the old parameters (P 35/25/15/8%,
+ * board (180 rows, radar-4 implied values): the old parameters (P 35/25/15/8%,
  * 0.1% of implied capped at $2,000) put 175/180 rows on FARM — the verdict
  * barely discriminated, because P x capped allocation almost always cleared
  * EV > $50 against a few dollars of gas. The new parameters (P 25/10/4/1%,
- * 0.02% of implied, uncapped) give FARM 56 (31.1%), THIN 64 (35.6%), SKIP 60
- * (33.3%): top-10 and ranks 11-40 all FARM, ranks 41-100 mixed, ranks 101+
+ * 0.02% of implied, uncapped) give FARM 51 (28.3%), THIN 77 (42.8%), SKIP 52
+ * (28.9%) on the radar-4 board (under radar-3: FARM 56, THIN 64, SKIP 60):
+ * top-10 and ranks 11-40 all FARM, ranks 41-100 mixed, ranks 101+
  * never FARM. The task's first suggestion (P 25/12/5/2, 0.1% uncapped,
  * EV > $100, net > $15/hr) was computed too and gives FARM 100 (55.6%) —
  * still outside the 25-40% band — so the allocation share, not the
@@ -870,9 +882,9 @@ export function radarRow(row: BoardRow): RadarRow {
     peer_category: row.model.peer_category,
     growth_multiplier: row.model.growth_multiplier,
     maturity_multiplier: row.model.maturity_multiplier,
-    loglog_a: row.model.loglog_a,
-    loglog_b: row.model.loglog_b,
-    loglog_source: row.model.loglog_source,
+    slope_a: row.model.slope_a,
+    slope_b: row.model.slope_b,
+    slope_source: row.model.slope_source,
   };
 }
 
@@ -881,13 +893,13 @@ export function buildRadar(snapshot: Snapshot, model: ModelConstants = MODEL): {
   const board = buildBoard(snapshot, model);
   const live = liveRows(snapshot);
   const peers = peerMultiples(snapshot.protocols, model);
-  const fit = fitLogLog(snapshot.protocols, model);
+  const fit = fitSlopeMedian(snapshot.protocols, model);
   const early = board.filter((r) => !snapshot.watchlist.includes(r.slug)).length;
   const peerTable = [...peers.byCategory.entries()]
     .filter(([, v]) => v.peers >= model.peer_min_peers)
     .map(([category, v]) => ({ category, peers: v.peers, median_multiple: round4(v.median) }))
     .sort((a, b) => b.peers - a.peers);
-  const loglogFits = [...fit.byCategory.entries()]
+  const slopeFits = [...fit.byCategory.entries()]
     .filter(([, v]) => v.n >= model.peer_min_peers)
     .map(([category, v]) => ({ category, peers: v.n, slope: round4(v.b), intercept: round4(v.a), source: v.source }))
     .sort((a, b) => b.peers - a.peers);
@@ -905,8 +917,10 @@ export function buildRadar(snapshot: Snapshot, model: ModelConstants = MODEL): {
     live,
     peer_table: peerTable,
     global_multiple: round4(peers.global),
-    loglog_fits: loglogFits,
-    loglog_global: { a: fit.global.a, b: fit.global.b, n: fit.global.n },
+    slope_fits: slopeFits,
+    slope_global: { a: fit.global.a, b: fit.global.b, n: fit.global.n },
+    trimmed_peers: fit.trimmedPeers,
+    total_peers: fit.totalPeers,
   };
   return { board, radar };
 }

@@ -1,4 +1,4 @@
-// Token Radar dashboard (radar-3-loglog). Static page: reads window.RADAR from
+// Token Radar dashboard (radar-4-slope-median). Static page: reads window.RADAR from
 // ../data.js, renders the ranked board, filters, a live-token tab, a per-protocol
 // detail panel and the model panel. No network calls, no fetch, no framework.
 (function () {
@@ -30,11 +30,11 @@
   function esc(s) { return String(s == null ? '' : s); }
 
   // Recompute implied value from the snapshot figures, exactly as lib/model.ts
-  // does: the row's own log-log line (ln mcap = a + b x ln TVL, fitted per
-  // category with shrinkage; coefficients stored at full precision in data.js)
-  // gives a predicted mcap/TVL ratio clamped to [floor, cap]; implied value is
-  // TVL x that ratio x growth multiplier x maturity multiplier. The result is
-  // checked against the board's stored number.
+  // does: the row's own slope-median line (ln mcap = a + 0.55 x ln TVL, with a
+  // the category's shrunk median intercept; coefficients stored at full
+  // precision in data.js) gives a predicted mcap/TVL ratio clamped to
+  // [floor, cap]; implied value is TVL x that ratio x growth multiplier x
+  // maturity multiplier. The result is checked against the board's stored number.
   function recompute(r) {
     var g = r.change_7d === null || r.change_7d === undefined ? 0 : r.change_7d;
     g = Math.min(M.growth_cap, Math.max(M.growth_floor, g));
@@ -42,8 +42,8 @@
     var a = (r.age_days === null || r.age_days === undefined) ? M.unknown_age_days : r.age_days;
     var mm = M.maturity_floor + (Math.min(Math.max(a, 0), M.maturity_days) / M.maturity_days) * M.maturity_range;
     var ratio;
-    if (r.loglog_a !== null && r.loglog_a !== undefined && r.loglog_b !== null && r.loglog_b !== undefined) {
-      var raw = Math.exp(r.loglog_a + r.loglog_b * Math.log(r.tvl_usd)) / r.tvl_usd;
+    if (r.slope_a !== null && r.slope_a !== undefined && r.slope_b !== null && r.slope_b !== undefined) {
+      var raw = Math.exp(r.slope_a + r.slope_b * Math.log(r.tvl_usd)) / r.tvl_usd;
       ratio = Math.min(M.peer_multiple_cap, Math.max(M.peer_multiple_floor, raw));
     } else {
       ratio = r.peer_multiple;
@@ -60,8 +60,8 @@
   // (top 10: 25%, 11-40: 10%, 41-100: 4%, else 1%); allocation 0.02% of
   // implied value, uncapped; EV = P x allocation - total gas cost.
   // Verdict: FARM when EV > $50 and net > $10/hr, THIN when EV > $0, else SKIP.
-  // Calibrated 17 Nov 2026: on this 180-row board that gives FARM 56 (31.1%),
-  // THIN 64 (35.6%), SKIP 60 (33.3%) — the old parameters (P 35/25/15/8%,
+  // Calibrated 17 Nov 2026: on this 180-row board that gives FARM 51 (28.3%),
+  // THIN 77 (42.8%), SKIP 52 (28.9%) — the old parameters (P 35/25/15/8%,
   // 0.1% capped at $2,000) put 175/180 rows on FARM and barely discriminated.
   function chainOf(p) { return (p.chains && p.chains.length) ? p.chains[0] : 'its main chain'; }
   function capitalFor(p) {
@@ -277,7 +277,7 @@
 
   function modelPanel() {
     var pt = el('tbody');
-    (DATA.loglog_fits || []).forEach(function (p) {
+    (DATA.slope_fits || []).forEach(function (p) {
       pt.appendChild(el('tr', null,
         el('td', { text: p.category }),
         el('td', { class: 'num', text: String(p.peers) }),
@@ -285,20 +285,22 @@
         el('td', { class: 'num', text: p.intercept.toFixed(4) }),
         el('td', { text: p.source })));
     });
-    var g = DATA.loglog_global || {};
+    var g = DATA.slope_global || {};
     return el('section', { class: 'card model' },
       el('h2', { text: 'How implied value is computed \u2014 model ' + esc(DATA.model_version) }),
       el('p', { text: 'One function scores every row, from the snapshot\u2019s own figures. No protocol name is special-cased and no row is hand-picked.' }),
       el('div', { class: 'formula', text:
-        'log-log fit: ln(mcap) = a + b \u00d7 ln(TVL), fitted per category on tokenised peers\n' +
-        '(mcap > 0, TVL \u2265 $5M, n = 128; category needs \u2265 ' + M.peer_min_peers + ' peers, else the global fit; 5 \u2264 n < 10 shrunk toward the global fit, w = n / (n + ' + M.loglog_shrink_prior + '))\n' +
-        'predicted ratio = clamp(exp(a + b \u00d7 ln(TVL)) / TVL, [' + M.peer_multiple_floor + ', ' + M.peer_multiple_cap + '])\n' +
+        'slope-median fit: ln(mcap) = a_cat + ' + M.slope_median_slope + ' \u00d7 ln(TVL), one slope for every category\n' +
+        'a_cat = median of (ln(mcap) - ' + M.slope_median_slope + ' \u00d7 ln(TVL)) over the category\u2019s tokenised peers,\n' +
+        'after trimming peers whose log(mcap/TVL) falls outside the central ' + Math.round((1 - 2 * M.slope_median_winsor_q) * 100) + '% (mcap > 0, TVL \u2265 $5M, n = 128 peers, ' + DATA.trimmed_peers + ' kept;\n' +
+        'every category\u2019s intercept is shrunk toward the global intercept, w = n / (n + ' + M.slope_median_prior + '), however few peers it has; a category with no trimmed peer falls back to the global intercept)\n' +
+        'predicted ratio = clamp(exp(a_cat + ' + M.slope_median_slope + ' \u00d7 ln(TVL)) / TVL, [' + M.peer_multiple_floor + ', ' + M.peer_multiple_cap + '])\n' +
         'growth multiplier = 1 + clamp(change_7d, ' + M.growth_floor + ', ' + M.growth_cap + ') / 100 \u00d7 ' + M.growth_weight + '\n' +
         'maturity multiplier = ' + M.maturity_floor + ' + min(age_days, ' + M.maturity_days + ') / ' + M.maturity_days + ' \u00d7 ' + M.maturity_range + '  (unknown age: ' + M.unknown_age_days + ' days)\n' +
         'implied value = round( TVL \u00d7 predicted ratio \u00d7 growth multiplier \u00d7 maturity multiplier )' }),
       el('div', { class: 'warn' }, el('b', { text: 'Honest limit: ' }),
-        'implied value is a ranking signal, not a price. Split-half validation of this log-log method on the snapshot\u2019s tokenised peers gives a median error of 0.5088 log10, about 3.2\u00d7 (within 2\u00d7 32.0%, within 3\u00d7 46.1%) \u2014 better than the old median-peer baseline (0.6804 log10, about 4.8\u00d7, within 2\u00d7 25.8%), but the \u22643\u00d7 target is still not met. A high rank means \u201cworth a closer look\u201d, never \u201cthis token will be worth this much\u201d.'),
-      el('h3', { text: 'Log-log fits by category (from the snapshot itself)' }),
+        'implied value is a ranking signal, not a price. Validation of this method on the snapshot\u2019s tokenised peers: deterministic split-half median error 0.5147 log10, about 3.3\u00d7 (within 2\u00d7 27.3%, within 3\u00d7 47.7%); leave-one-out 0.5029 log10, about 3.2\u00d7; mean over 100 seeded split-half trials 0.520 log10 (3.3\u00d7) vs 0.565 (3.7\u00d7) for the old per-category log-log model \u2014 but the \u22643\u00d7 target is still not met. A high rank means \u201cworth a closer look\u201d, never \u201cthis token will be worth this much\u201d.'),
+      el('h3', { text: 'Slope-median intercepts by category (from the snapshot itself)' }),
       el('table', { class: 'peer' },
         el('thead', null, el('tr', null,
           el('th', { scope: 'col', text: 'Category' }),
@@ -307,8 +309,8 @@
           el('th', { scope: 'col', class: 'num', text: 'Intercept a' }),
           el('th', { scope: 'col', text: 'Fit' }))),
         pt),
-      el('p', { text: 'Global fit (categories with fewer than ' + M.peer_min_peers + ' peers fall back to it): ln(mcap) = ' + (g.a === undefined ? 'n/a' : g.a.toFixed(4)) + ' + ' + (g.b === undefined ? 'n/a' : g.b.toFixed(4)) + ' \u00d7 ln(TVL), n = ' + (g.n === undefined ? 'n/a' : g.n) + '.' }),
-      el('p', { text: 'Why log-log, not one flat multiple: market cap does not scale 1-for-1 with TVL \u2014 fitted slopes run from about 0.44 (RWA) to about 1.78 (Dexs) in this snapshot. A flat multiple overstates small protocols and understates large ones in steep categories, for no reason the snapshot supports.' }));
+      el('p', { text: 'Global intercept (categories with no trimmed peer fall back to it): ln(mcap) = ' + (g.a === undefined ? 'n/a' : g.a.toFixed(4)) + ' + ' + (g.b === undefined ? 'n/a' : g.b.toFixed(4)) + ' \u00d7 ln(TVL), n = ' + (g.n === undefined ? 'n/a' : g.n) + ' trimmed peers of ' + DATA.total_peers + ' tokenised peers.' }),
+      el('p', { text: 'Why one slope + median intercepts, not a slope per category: the old model fitted a slope per category on 5\u201315 noisy peers, and its Dexs slope of about 1.78 sent Bittensor dTAO \u2014 56 days old, 7d \u22126.6% \u2014 to rank #1 at $226M with a raw ratio of 3.66 clamped to 1.00. A slope is not identifiable per category from this little data; a single cross-validated slope (0.55, grid 0.45\u20130.80, plateau 0.52\u20130.60) plus a robust median intercept per category removes that artefact \u2014 under this model no board row hits the clamp and dTAO ranks 21st at $16M.' }));
   }
 
   // Why some big names are not on this board (research section 4.4).
@@ -337,7 +339,7 @@
       ul,
       el('p', { text: 'Unit is out for a different reason: its parent is None, but its category is Bridge \u2014 it tokenises bitcoin as unitBTC, so the category rule (bridges are not launches) removes it, not a parent.' }),
       el('p', { text: 'USDD stays on the board because it is on the watchlist and its snapshot record is pre-token \u2014 but USDD is a stablecoin. Its implied value is the value of a hypothetical governance token, NOT the value of the stablecoin.' }),
-      el('p', { text: 'Lightning Network and Bittensor dTAO also stay, for the same coverage reason: Lightning is Bitcoin\u2019s payments network and has no token by design, and dTAO is Bittensor\u2019s subnet system whose TAO token already trades. Both rows are flagged here rather than silently ranked.' }),
+      el('p', { text: 'Lightning Network and Bittensor dTAO also stay, for the same coverage reason: Lightning is Bitcoin\u2019s payments network and has no token by design, and dTAO is Bittensor\u2019s subnet system whose TAO token already trades. Both rows are flagged here rather than silently ranked \u2014 and under this model dTAO is no longer at the top: it ranks 21st at $16M, because a single slope plus a median intercept does not let one steep category fit put a 56-day-old protocol first.' }),
       el('p', { text: 'Flagged watchlist rows kept for coverage (manual review, TOP20.md): USDD, Bittensor dTAO, Plume Vaults, Hive Protocol and Lightning Network \u2014 each already has a live token or no token can ever exist, yet the sealed coverage gate requires all 40 watchlist slugs on the board.' }));
   }
 
@@ -351,7 +353,7 @@
     if (!r) return;
     state.sel = slug; writeHash();
     var c = recompute(r);
-    // The log-log coefficients are stored at full precision in data.js, so a
+    // The slope-median coefficients are stored at full precision in data.js, so a
     // recompute from data.js lands exactly on the stored number (verified
     // 180/180 exact). A 0.1% tolerance is the honest check.
     var gap = Math.abs(c.value - r.implied_value_usd) / r.implied_value_usd;
@@ -369,7 +371,7 @@
         kv('TVL', money(r.tvl_usd)),
         kv('Seven-day growth', pct(r.change_7d)),
         kv('Age with no token', age(r.age_days)),
-        kv('Predicted mcap / TVL', mult(c.ratio) + ' (' + r.peer_category + ', ' + (r.loglog_source || 'log-log fit') + ')'),
+        kv('Predicted mcap / TVL', mult(c.ratio) + ' (' + r.peer_category + ', ' + (r.slope_source || 'slope-median fit') + ')'),
         kv('Growth multiplier', 'x' + c.gm.toFixed(4)),
         kv('Maturity multiplier', 'x' + c.mm.toFixed(4)),
         kv('Implied value', money(r.implied_value_usd))),
@@ -403,7 +405,7 @@
     st.appendChild(el('div', { class: 'stat' }, el('span', { text: 'Watchlist covered' }), el('b', { text: DATA.watchlist_size + ' / ' + DATA.watchlist_size }), el('small', { text: 'every watchlist slug scored' })));
     st.appendChild(el('div', { class: 'stat' }, el('span', { text: 'Pre-token rows' }), el('b', { text: String(DATA.board_size) }), el('small', { text: DATA.early_size + ' early rows below the floor' })));
     st.appendChild(el('div', { class: 'stat' }, el('span', { text: 'Live-token set aside' }), el('b', { text: String(DATA.live_size) }), el('small', { text: 'already trading, shown apart' })));
-    st.appendChild(el('div', { class: 'stat' }, el('span', { text: 'Global log-log slope' }), el('b', { text: DATA.loglog_global ? ('x' + DATA.loglog_global.b.toFixed(4)) : 'n/a' }), el('small', { text: 'ln(mcap) vs ln(TVL), all 128 peers' })));
+    st.appendChild(el('div', { class: 'stat' }, el('span', { text: 'Model slope' }), el('b', { text: DATA.slope_global ? ('x' + DATA.slope_global.b.toFixed(2)) : 'n/a' }), el('small', { text: 'one slope, cross-validated; median intercept per category' })));
     shell.appendChild(st);
     var cats = Array.from(new Set(DATA.rows.map(function (r) { return r.category || 'Other'; }))).sort();
     var search = el('input', { type: 'search', id: 'q', placeholder: 'Search name, slug, category or chain', value: state.q, 'aria-label': 'Search the board' });

@@ -1,5 +1,13 @@
 # Backtest — token-radar-01, sealed snapshot (17 Nov 2026 ~15:25 WIB)
 
+> **Update 19 Nov 2026 ~01:00 WIB: the shipped model is now `radar-4-slope-median`
+> (§E below). Sections A–D document superseded models and are kept verbatim as
+> the baseline record. `backtest.mjs` now re-implements radar-4 (plus radar-3 as
+> the baseline) — the numbers in §E come from `scripts/backtest.mjs` /
+> `scripts/backtest.json` on the exact same split-half protocol plus
+> leave-one-out and 200 seeded random trials. Full method: `RADAR4.md`.
+
+
 Run: `node entry/scripts/backtest.mjs` → `entry/scripts/backtest.json`.
 Node stdlib only, offline, deterministic, no network, no make.fun key.
 Input: the SEALED kit snapshot
@@ -267,3 +275,28 @@ stated in the plan.
 5. Nothing here unblocks submission: the keypair/API key is still missing
    (out of this backtest's scope), and the top-20 manual review is still
    outstanding.
+
+## E) radar-4-slope-median (19 Nov 2026, shipped model)
+
+`ln(mcap) = a_cat + 0.55 × ln(TVL)`; `a_cat` = median of `(ln(mcap) − 0.55 × ln(TVL))`
+over the category's trimmed peers (central 60% of log(mcap/TVL), 78/128 kept),
+shrunk to the global median intercept with `w = n / (n + 10)` for every category.
+Growth × maturity unchanged. Full method + the bug found while rewriting this
+script: `RADAR4.md`.
+
+| Protocol | radar-4 | radar-3 |
+|---|---:|---:|
+| Split-half deterministic pooled (n = 128) | 0.5147 log10 (3.27×), within-2× 27.3%, within-3× 47.7% | 0.5088 (3.23×), within-2× 32.0%, within-3× 46.1% |
+| Leave-one-out | **0.5029 (3.18×)**, within-2× 28.1%, within-3× 48.4% | 0.6139 (4.11×) |
+| 100 seeded trials (tuning set) | **mean 0.5197 (3.31×)**, paired −0.0449 ± 0.0034, wins 91/100 | mean 0.5646 (3.67×) |
+| 100 FRESH trials (unused seeds) | **mean 0.5217 (3.32×)**, paired −0.0376 ± 0.0033, wins 88/100 | mean 0.5592 (3.62×) |
+
+**Verdict: target ≤3× STILL NOT MET** (best honest protocol: LOO 3.18×). The
+improvement over radar-3 is real but modest (~7% relative on trial means);
+the deterministic split is a tie within noise (0.006 log10 vs SE ≈ 0.03–0.04).
+What radar-4 unambiguously fixes is the board's credibility: radar-3's #1 was
+Bittensor dTAO at $225.7M with raw ratio 3.66 clamped to 1.00; radar-4's #1 is
+Steakhouse Financial at $80.4M, dTAO ranks 21st at $16.1M, zero rows hit the
+clamp. Board: 180 rows, 40/40 watchlist, farm verdicts FARM 51 / THIN 77 /
+SKIP 52. Gate re-run: **7/7 PASS**. Screenshots re-rendered from the new
+dashboard (the old ones showed dTAO #1 and must not be reused).

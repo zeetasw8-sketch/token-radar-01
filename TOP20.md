@@ -1,5 +1,41 @@
 # Top-20 manual review — token-radar-01 board
 
+## Update 19 Nov 2026 ~01:00 WIB — model radar-4-slope-median adopted (board still 180 rows)
+
+Model `radar-3-loglog` → **`radar-4-slope-median`**: one slope (0.55,
+cross-validated) + median intercept per category on trimmed peers (central
+60% of log(mcap/TVL), 78/128 kept), shrunk with `w = n/(n+10)` for every
+category; ratio clamped [0.02, 1.0], growth × maturity unchanged. Backtest
+(`RADAR4.md` / `BACKTEST.md` §E): split-half pooled **0.5147 log10 ≈ 3.27×**
+(tied with radar-3's 0.5088 within noise on that one split), **LOO 0.5029 ≈
+3.18×** (vs radar-3 0.6139), 100 seeded trials mean 0.5197 vs 0.5646
+(paired −0.0449 ± 0.0034, wins 91/100), 100 fresh trials 0.5217 vs 0.5592
+(wins 88/100). **≤3× target still NOT met.** Board membership unchanged
+(same 180 rows, 40/40 watchlist); only values and ranks moved. Gate re-run:
+**7/7 PASS**. Screenshots re-rendered from the new dashboard.
+
+New Top 10 (implied value): 1 Steakhouse Financial $80,404,731; 2 Gauntlet
+$61,530,702; 3 Veda $59,399,633; 4 USDD $46,912,184; 5 Upshift $35,624,629;
+6 OnRe $28,897,166; 7 OpenTrade $27,601,872; 8 Plume Vaults $25,920,551;
+9 BitFi Basis $24,140,704; 10 Symbiotic $23,825,686. Exact Top 11–20 in
+`scripts/backtest.json` (`board.radar4Top20`) and `entry/out/board.json`.
+
+Flag RESOLVED — dTAO is no longer #1: under radar-4 it ranks **21st at
+$16,105,777** (raw ratio 0.071, no clamp). Radar-3's #1 ($225.7M, raw ratio
+3.66 clamped to 1.00) was a clamp artefact of the Dexs slope 1.78; the new
+top of the board is a smooth gradient and **zero rows hit the clamp**.
+Farm-plan verdicts on the new board: **FARM 51 (28.3%), THIN 77 (42.8%),
+SKIP 52 (28.9%)** — top-40 all FARM, ranks 41–100 mixed (11 FARM / 47 THIN
+/ 2 SKIP), ranks 101+ never FARM (30 THIN / 50 SKIP).
+
+The verdict table below is the pre-radar-4 review and still stands for the
+surviving rows as a manual review: the five flagged watchlist rows are now
+at new ranks — dTAO #21 EXCLUDE, USDD #4 EXCLUDE, Plume Vaults #8 EXCLUDE,
+Hive Protocol #12 EXCLUDE, Lightning Network #23 EXCLUDE — and stay on the
+board because the sealed coverage gate requires
+all 40 watchlist slugs.
+
+
 ## Update 17 Nov 2026 ~16:00 WIB — parent exclusion applied (board 195 → 180 rows)
 
 `PARENT_EXCLUDED` in `lib/model.ts` (18 slugs, verified live against
